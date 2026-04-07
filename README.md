@@ -8,7 +8,7 @@
 
 ## Overview
 
-This workshop builds a **real-time bus fleet intelligence pipeline** for Prasarana RapidBus using **Confluent Cloud (Kafka + Flink SQL)**. You will ingest live IoT sensor telemetry from buses, process and enrich the data in Flink SQL, and apply AI-driven inference to automatically detect:
+This workshop builds a **real-time bus fleet intelligence pipeline** for RapidBus using **Confluent Cloud (Kafka + Flink SQL)**. You will ingest live IoT sensor telemetry from buses, process and enrich the data in Flink SQL, and apply AI-driven inference to automatically detect:
 
 - **Bus bunching** (multiple buses too close together on the same route)
 - **Depot departure delays** and schedule adherence
@@ -169,7 +169,7 @@ This connector simulates GPS, speed, door state, engine temperature, fuel level,
 {
   "type": "record",
   "name": "BusTelemetry",
-  "namespace": "prasarana.rapidbus",
+  "namespace": "bus.rapidbus",
   "fields": [
     {
       "name": "telemetry_id",
@@ -292,7 +292,7 @@ This connector simulates schedule adherence events — planned vs actual departu
 {
   "type": "record",
   "name": "ScheduleFeed",
-  "namespace": "prasarana.rapidbus",
+  "namespace": "bus.rapidbus",
   "fields": [
     {
       "name": "schedule_id",
@@ -393,7 +393,7 @@ Once both connectors are running, data should flow into the respective topics.
 
 ### 7.2 Create Reference Tables (routes and buses)
 
-These static reference tables describe Prasarana's routes and registered fleet. They will be used to enrich raw telemetry with operational context.
+These static reference tables describe bus's routes and registered fleet. They will be used to enrich raw telemetry with operational context.
 
 **1. Create the `routes` table:**
 
@@ -1010,7 +1010,7 @@ WITH (
   'bedrock.params.max_tokens'    = '500',
   'bedrock.connection'           = 'bedrock-connection',
   'bedrock.system_prompt'        = '
-  You are a government bus fleet operations monitoring agent for Prasarana RapidBus, Malaysia.
+  You are a government bus fleet operations monitoring agent for RapidBus, Malaysia.
   Your task is to analyze aggregated bus telemetry and schedule data and assess the current
   operational status of each bus.
 
@@ -1080,7 +1080,7 @@ WITH (
   'bedrock.params.max_tokens'    = '500',
   'bedrock.connection'           = 'bedrock-connection',
   'bedrock.system_prompt'        = '
-  You are a schedule optimization advisor for Prasarana RapidBus, a government public transport operator in Malaysia.
+  You are a schedule optimization advisor for RapidBus, a government public transport operator in Malaysia.
   Based on aggregated route performance data, recommend a corrective scheduling action.
 
   Options:
@@ -1441,44 +1441,7 @@ ORDER BY avg_delay_min DESC;
 ## Architecture Diagram
 
 ```
-┌────────────────────────────────────────────────────────────────────────────────┐
-│                   Prasarana RapidBus — Confluent Cloud Pipeline                │
-│                                                                                │
-│  ┌─────────────────┐    ┌──────────────────────────────────────────────────┐  │
-│  │  Datagen Source │    │              Apache Kafka Topics                  │  │
-│  │                 │───►│  bus_telemetry   │  schedule_feed                │  │
-│  │  (IoT Schemas)  │    └──────────────────────────────────────────────────┘  │
-│  └─────────────────┘                        │                                 │
-│                                             ▼                                 │
-│  ┌──────────────────────────────────────────────────────────────────────────┐ │
-│  │                       Confluent Flink SQL                                │ │
-│  │                                                                          │ │
-│  │  Reference Tables: routes, buses                                         │ │
-│  │  Rekeyed Streams:  bus_telemetry_rekeyed, schedule_feed_rekeyed          │ │
-│  │  Enriched Stream:  TelemetryEnriched                                     │ │
-│  │  Aggregations:     TelemetryEnriched_agg, RoutePerformance               │ │
-│  │                                                                          │ │
-│  │  Intelligence Queries:                                                   │ │
-│  │    - Bus Bunching Detection  (OVER window)                               │ │
-│  │    - Depot Departure Monitor (TUMBLE window)                             │ │
-│  │    - Punctuality Scoring     (rolling OVER)                              │ │
-│  │    - Schedule Re-issuance    (MATCH_RECOGNIZE + interval join)           │ │
-│  │    - Alert Routing           (EXECUTE STATEMENT SET)                     │ │
-│  │                                                                          │ │
-│  │  AI Inference:                                                           │ │
-│  │    - BusOperationsAgent   → ON_TRACK / AT_RISK / CRITICAL                │ │
-│  │    - ScheduleAdvisorAgent → MAINTAIN / INCREASE_HEADWAY / DEPLOY_RELIEF  │ │
-│  └──────────────────────────────────────────────────────────────────────────┘ │
-│                                             │                                 │
-│                                             ▼                                 │
-│  ┌────────────────────┐    ┌────────────────────────────────────────────────┐ │
-│  │   AWS Bedrock      │    │  Tableflow (Iceberg) → DuckDB Analytics        │ │
-│  │   (Claude LLM)     │    │  bunching_alerts, RoutePerformance,            │ │
-│  │                    │    │  new_schedule_recommendations                  │ │
-│  └────────────────────┘    └────────────────────────────────────────────────┘ │
-└────────────────────────────────────────────────────────────────────────────────┘
-```
-
+![Architecture](image/architecture.png)
 ---
 
-*Workshop adapted for Prasarana RapidBus government bus tracking use case. Based on Confluent Commercial Workshops — Mining (Example 1) and Flink Tableflow Banking (Example 2).*
+*Workshop adapted for RapidBus government bus tracking use case. Based on Confluent Commercial Workshops — Mining (Example 1) and Flink Tableflow Banking (Example 2).*
