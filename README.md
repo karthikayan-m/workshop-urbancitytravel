@@ -1,8 +1,11 @@
 # Workshop: Real-Time Bus Fleet Intelligence with Confluent Cloud (Kafka + Flink SQL)
 ### Government Bus Tracking & Operations System
 
-
 > **Use Case:** Public Bus Fleet Operations
+
+<div align="center">
+  <img src="images/confluent.png" width="50%" height="50%">
+</div>
 
 ---
 
