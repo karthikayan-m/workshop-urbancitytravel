@@ -18,7 +18,7 @@ This workshop builds a **real-time bus fleet intelligence pipeline** for Prasara
 Instead of static timetables, the system reacts to live GPS, door sensor, and engine telemetry — producing actionable operational decisions in real time.
 
 
-![Workshop Flow](assets/workshop-urbancitytravel.png)
+![Workshop Flow](image/workshop-urbancitytravel.png)
 
 ---
 
