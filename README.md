@@ -17,16 +17,8 @@ This workshop builds a **real-time bus fleet intelligence pipeline** for Prasara
 
 Instead of static timetables, the system reacts to live GPS, door sensor, and engine telemetry — producing actionable operational decisions in real time.
 
-```
-┌─────────────────────────────────────────────────────────────────────────────┐
-│                     RapidBus Real-Time Intelligence Platform                │
-│                                                                             │
-│  IoT Bus Sensors ──► Kafka Topics ──► Flink SQL ──► Decisions / Alerts     │
-│     (GPS, Door,          (bus_telemetry,    (Enrich,     (BunchingAlert,    │
-│      Engine, AC)          schedule_feed)    Aggregate,    DepotStatus,      │
-│                                             AI Infer)     NewSchedule)      │
-└─────────────────────────────────────────────────────────────────────────────┘
-```
+
+![Workshop Flow](assets/workshop-urbancitytravel.png)
 
 ---
 
