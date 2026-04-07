@@ -609,12 +609,15 @@ SELECT
   t.engine_temp_c,
   t.fuel_level_pct,
   t.passenger_count,
-  CAST(t.passenger_count AS FLOAT) / CAST(b.capacity AS FLOAT) * 100.0 AS occupancy_pct,
+  CAST(
+    CAST(t.passenger_count AS FLOAT) / CAST(b.capacity AS FLOAT) * 100.0
+    AS FLOAT
+  ) AS occupancy_pct,
   t.ac_status,
   t.event_time
 FROM bus_telemetry_rekeyed t
-LEFT JOIN buses b   ON t.bus_id   = b.bus_id
-LEFT JOIN routes r  ON t.route_id = r.route_id;
+LEFT JOIN buses  b ON t.bus_id   = b.bus_id
+LEFT JOIN routes r ON t.route_id = r.route_id;
 ```
 
 ---
