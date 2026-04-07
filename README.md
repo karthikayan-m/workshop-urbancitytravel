@@ -4,7 +4,7 @@
 > **Use Case:** Public Bus Fleet Operations
 
 <div align="center">
-  <img src="images/confluent.png" width="50%" height="50%">
+  <img src="image/confluent.png" width="50%" height="50%">
 </div>
 
 ---
