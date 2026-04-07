@@ -746,6 +746,40 @@ Bus bunching occurs when two or more buses on the same route have an actual head
 > **Fix (Issue 2):** Previously failed with *"Non-time attribute sort is not supported for bounded over window"* because `schedule_feed_rekeyed` was created without a `WATERMARK` clause. After adding `WATERMARK FOR event_time` to the table definition in step 7.3, `ORDER BY event_time` is now valid and this query runs as-is.
 
 ```sql
+-- 1) Append-only table for OVER window analytics
+CREATE TABLE schedule_feed_over (
+  schedule_id           INT NOT NULL PRIMARY KEY NOT ENFORCED,
+  bus_id                STRING,
+  route_id              STRING,
+  stop_id               STRING,
+  planned_departure_min INT,
+  actual_departure_min  INT,
+  headway_target_min    INT,
+  actual_headway_min    INT,
+  event_time            TIMESTAMP_LTZ(3) METADATA FROM 'timestamp',
+  WATERMARK FOR event_time AS event_time - INTERVAL '5' SECOND
+) DISTRIBUTED BY (schedule_id) INTO 1 BUCKETS
+WITH ('changelog.mode' = 'append');
+```
+
+```sql
+-- 2) Populate the append-only table from the original stream
+INSERT INTO schedule_feed_over
+SELECT
+  schedule_id,
+  bus_id,
+  route_id,
+  stop_id,
+  planned_departure_min,
+  actual_departure_min,
+  headway_target_min,
+  actual_headway_min,
+  $rowtime AS event_time
+FROM schedule_feed;
+```
+
+```sql
+-- 3) Run the OVER window on the append-only table
 SELECT
   schedule_id,
   bus_id,
@@ -759,7 +793,7 @@ SELECT
     WHEN actual_headway_min < headway_target_min * 0.5 THEN 'WARNING'
     ELSE 'NORMAL'
   END AS bunching_status
-FROM schedule_feed_rekeyed
+FROM schedule_feed_over
 WINDOW w AS (
   PARTITION BY route_id
   ORDER BY event_time
@@ -820,7 +854,7 @@ SELECT
     SUM(CASE WHEN (actual_departure_min - planned_departure_min) <= 5 THEN 1 ELSE 0 END) OVER w
     AS FLOAT
   ) / CAST(COUNT(*) OVER w AS FLOAT) * 100.0 AS punctuality_score_pct
-FROM schedule_feed_rekeyed
+FROM schedule_feed_over
 WINDOW w AS (
   PARTITION BY bus_id
   ORDER BY event_time
@@ -862,7 +896,7 @@ SELECT
   total_delay,
   start_ts,
   end_ts
-FROM schedule_feed_rekeyed
+FROM schedule_feed_over
 MATCH_RECOGNIZE (
   PARTITION BY route_id, bus_id
   ORDER BY event_time
@@ -884,13 +918,14 @@ MATCH_RECOGNIZE (
 
 ```sql
 CREATE TABLE new_schedule_recommendations (
-  route_id              STRING,
-  bus_id                STRING,
-  recommended_headway   INT,
-  adjustment_reason     STRING,
-  issued_at             TIMESTAMP_LTZ(3),
+  bus_id              STRING NOT NULL,
+  route_id            STRING,
+  recommended_headway INT,
+  adjustment_reason   STRING,
+  issued_at           TIMESTAMP_LTZ(3),
   PRIMARY KEY (bus_id) NOT ENFORCED
-);
+)
+DISTRIBUTED BY (bus_id) INTO 1 BUCKETS;
 ```
 
 **Step 4 — Issue new schedule:**
@@ -898,15 +933,15 @@ CREATE TABLE new_schedule_recommendations (
 ```sql
 INSERT INTO new_schedule_recommendations
 SELECT
-  sv.route_id,
   sv.bus_id,
-  r.headway_target_min + 5 AS recommended_headway,
+  sv.route_id,
+  CAST(r.headway_target_min + 5 AS INT) AS recommended_headway,
   CONCAT(
     'Bus ', sv.bus_id, ' on route ', sv.route_id,
     ' had 3+ consecutive late departures. Total delay: ',
     CAST(sv.total_delay_min AS STRING), ' min. Adjusting headway.'
-  )                        AS adjustment_reason,
-  sv.last_violation_time   AS issued_at
+  ) AS adjustment_reason,
+  sv.last_violation_time AS issued_at
 FROM schedule_violations sv
 LEFT JOIN (
   SELECT route_id, AVG(headway_target_min) AS headway_target_min
@@ -925,23 +960,25 @@ Persist bunching and depot-delay alerts into dedicated topics as a single Flink 
 
 ```sql
 CREATE TABLE bunching_alerts (
-  schedule_id    INT,
+  schedule_id    INT NOT NULL,
   bus_id         STRING,
   route_id       STRING,
   stop_id        STRING,
   message        STRING,
   PRIMARY KEY (schedule_id) NOT ENFORCED
-);
+)
+DISTRIBUTED BY (schedule_id) INTO 1 BUCKETS;
 ```
 
 ```sql
 CREATE TABLE depot_delay_alerts (
-  bus_id      STRING,
+  bus_id      STRING NOT NULL,
   route_id    STRING,
   depot_id    STRING,
   message     STRING,
   PRIMARY KEY (bus_id) NOT ENFORCED
-);
+)
+DISTRIBUTED BY (bus_id) INTO 1 BUCKETS;
 ```
 
 **2. Execute as a Statement Set:**
