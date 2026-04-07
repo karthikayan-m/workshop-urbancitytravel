@@ -1440,9 +1440,9 @@ ORDER BY avg_delay_min DESC;
 
 ## Architecture Diagram
 
-```
 
-![Architecture](image/architecture.png)
+
+![Workshop architecture](image/architecture.png)
 
 ---
 
