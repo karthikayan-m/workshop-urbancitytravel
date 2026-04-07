@@ -1441,7 +1441,9 @@ ORDER BY avg_delay_min DESC;
 ## Architecture Diagram
 
 ```
+
 ![Architecture](image/architecture.png)
+
 ---
 
 *Workshop adapted for RapidBus government bus tracking use case. Based on Confluent Commercial Workshops — Mining (Example 1) and Flink Tableflow Banking (Example 2).*
