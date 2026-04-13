@@ -23,6 +23,10 @@ Instead of static timetables, the system reacts to live GPS, door sensor, and en
 
 ![Workshop Flow](image/workshop-urbancitytravel.png)
 
+## Architecture Diagram
+
+
+![Workshop architecture](image/architecture.png)
 ---
 
 ## Table of Contents
@@ -93,7 +97,7 @@ Design and implement a **real-time bus fleet intelligence system** where:
 
 1. Sign up and log in to **Confluent Cloud** at https://confluent.cloud.
 2. Open **Billing & payment** → **Payment details & contacts**.
-3. Enter promo code **`POPTOUT0006JDK5`** to use the platform for 5 days without a credit card (lab purposes).
+3. Enter promo code **`CONFLUENTDEV1`** to skip the pay wall .
 
 ---
 
@@ -1444,11 +1448,6 @@ ORDER BY avg_delay_min DESC;
 
 ---
 
-## Architecture Diagram
-
-
-
-![Workshop architecture](image/architecture.png)
 
 ---
 
