@@ -101,7 +101,7 @@ Design and implement a **real-time bus fleet intelligence system** where:
 
 ---
 
-## Step 2 — Install Confluent CLI
+## Step 2 — Install Confluent CLI (Optional)
 
 Install the CLI for your OS:
 https://docs.confluent.io/confluent-cli/current/install.html
@@ -126,7 +126,7 @@ https://docs.confluent.io/confluent-cli/current/install.html
 
 ---
 
-## Step 4 — Create API Keys
+## Step 4 — Create API Keys (Optional Step)
 
 1. Go to **Kafka Cluster** → **API Keys** → **Add Key**.
 2. **Select account for API Key:** choose **My Account**.
